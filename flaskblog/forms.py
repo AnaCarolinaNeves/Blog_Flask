@@ -1,24 +1,29 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from flaskblog.models import Usuario
+from flaskblog.models import User
 
-class CadastroForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired(), Length(min=2, max=20)])
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Nome', validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    senha = PasswordField('Senha', validators=[DataRequired()])
-    confirma_senha = PasswordField('Confirma senha', validators=[DataRequired(), EqualTo('senha')])
-
+    password = PasswordField('Senha', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirme a senha', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Cadastrar')
 
-    def valida_email(self, email):
-        usuario = Usuario.query.filter_by(email=email.data).first()
-        if usuario:
-            raise ValidationError('O email já está sendo utilizado');
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('O nome de usuário já está sendo utilizado. Por favor, escolha outro.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('O email já está sendo utilizado. Por favor, escolha outro.')
+
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
-    senha = PasswordField('Senha', validators=[DataRequired()])
-    guardar_login = BooleanField('Continuar conectado')
-    
+    password = PasswordField('Senha', validators=[DataRequired()])
+    remember = BooleanField('Continuar conectado')
     submit = SubmitField('Entrar')
