@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm
 from flaskblog.models import User
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -42,7 +42,7 @@ def cadastrar():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash(f'Conta criada com sucesso. Seja bem-vindo(a), {form.nome.data}!', 'success')
         return redirect(url_for('login'))
     return render_template('cadastrar.html', title='Cadastrar', form=form)
 
@@ -67,7 +67,18 @@ def logout():
     flash('Para entrar novamente, é necessário realizar o login', 'info')
     return redirect(url_for('home'))
 
-@app.route("/conta")
+@app.route("/conta", methods=['GET', 'POST'])
 @login_required
 def conta():
-    return render_template('conta.html', title='Conta')
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('A sua conta foi atualizada', 'success')
+        return redirect(url_for('conta'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+    return render_template('conta.html', title='Conta', image_file=image_file, form=form)
