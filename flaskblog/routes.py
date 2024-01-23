@@ -1,3 +1,6 @@
+import os
+import secrets
+from PIL import Image
 from flask import render_template, url_for, flash, redirect, request
 from flaskblog import app, db, bcrypt
 from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm
@@ -31,13 +34,12 @@ def home():
 def sobre():
     return render_template('sobre.html', title='Sobre')
 
-
 @app.route("/cadastrar", methods=['GET', 'POST'])
 def cadastrar():
     if current_user.is_authenticated:
         return(url_for('home'))
     form = RegistrationForm()
-    if form.validate_on_submit():
+    if form.validate_on_submit(): 
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
@@ -67,11 +69,27 @@ def logout():
     flash('Para entrar novamente, é necessário realizar o login', 'info')
     return redirect(url_for('home'))
 
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+    
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
+
 @app.route("/conta", methods=['GET', 'POST'])
 @login_required
 def conta():
     form = UpdateAccountForm()
     if form.validate_on_submit():
+        if form.picture.data:
+            picture_save = save_picture(form.picture.data)
+            current_user.image_file = picture_save
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
