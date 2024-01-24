@@ -3,7 +3,7 @@ import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
 from flaskblog.models import User
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -88,8 +88,11 @@ def conta():
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
-            picture_save = save_picture(form.picture.data)
-            current_user.image_file = picture_save
+            old_pic = current_user.image_file
+            picture_file = save_picture(form.picture.data)
+            current_user.image_file = picture_file
+            if old_pic != 'default.jpg':
+                os.remove(os.path.join(app.root_path, 'static/profile_pics', old_pic))
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
@@ -100,3 +103,13 @@ def conta():
         form.email.data = current_user.email
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template('conta.html', title='Conta', image_file=image_file, form=form)
+
+@app.route("/post/novo", methods=['GET', 'POST'])
+@login_required
+def novo_post():
+    form = PostForm()
+    if form.validate_on_submit():
+
+        flash('Post publicado com sucesso', 'success')
+        return redirect(url_for('home'))
+    return render_template('criar_post.html', title='Novo Post', form=form)
