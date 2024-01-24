@@ -1,34 +1,17 @@
 import os
 import secrets
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request
+from flask import render_template, url_for, flash, redirect, request, abort
 from flaskblog import app, db, bcrypt
 from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
-from flaskblog.models import User
+from flaskblog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
-
-
-posts = [ 
-    {
-        'author': 'Joe Doe',
-        'title': 'Blog Post 1',
-        'content': 'Primeiro post',
-        'date_posted': '16 janeiro, 2024'
-    },
-    {
-        'author': 'Jane Doe',
-        'title': 'Blog Post 2',
-        'content': 'Segundo post',
-        'date_posted': '17 janeiro, 2024'
-    }
-]
-
 
 @app.route("/")
 @app.route("/home")
 def home():
+    posts = Post.query.all()
     return render_template('home.html', posts=posts)
-
 
 @app.route("/sobre")
 def sobre():
@@ -109,7 +92,32 @@ def conta():
 def novo_post():
     form = PostForm()
     if form.validate_on_submit():
-
+        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
         flash('Post publicado com sucesso', 'success')
         return redirect(url_for('home'))
-    return render_template('criar_post.html', title='Novo Post', form=form)
+    return render_template('criar_post.html', title='Novo Post', form=form, legend='Novo Post')
+
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('post.html', title=post.title, post=post)
+
+@app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
+@login_required
+def update_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.author != current_user:
+        abort(403)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
+        db.session.commit()
+        flash('Post atualizado com sucesso', 'success')
+        return redirect(url_for('post', post_id=post.id))
+    elif request.method == 'GET':
+        form.title.data = post.title
+        form.content.data = post.content
+    return render_template('criar_post.html', title='Atualizar Post', form=form, legend='Atualizar Post')
