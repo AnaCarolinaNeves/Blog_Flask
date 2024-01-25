@@ -83,3 +83,13 @@ a.article-title:hover {
 .account-heading {
     font-size: 2.5rem;
 }
+
+.btn-pagination {
+    color: #ffffff;
+    background-color: #428bca;
+}
+
+.btn-pagination-current{
+    color: #ffffff;
+    background-color: #5f788a;
+}
