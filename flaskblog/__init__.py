@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_mail import Mail
 
 app = Flask(__name__)
 # Key gerada pelo 'secrets.token_hex(16)'
@@ -13,5 +14,14 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
+# Configurações envio e-mail. flask-email
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+# É possível configurar o e-mail e senha colocando-os no environment variables
+#app.config['MAIL_USERNAME/PASSWORD'] = os.environ.get('EMAIL_USER/PASSWORD')
+app.config['MAIL_USERNAME'] = ''
+app.config['MAIL_PASSWORD'] = ''
+mail = Mail(app)
 
 from flaskblog import routes

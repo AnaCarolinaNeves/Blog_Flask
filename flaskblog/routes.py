@@ -2,10 +2,12 @@ import os
 import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
-from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
+from flaskblog import app, db, bcrypt, mail
+from flaskblog.forms import (RegistrationForm, LoginForm, UpdateAccountForm, PostForm, 
+                             RequestResetForm, ResetPasswordForm)
 from flaskblog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
+from flask_mail import Message 
 
 @app.route("/")
 @app.route("/home")
@@ -28,7 +30,7 @@ def cadastrar():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash(f'Conta criada com sucesso. Seja bem-vindo(a), {form.nome.data}!', 'success')
+        flash(f'Conta criada com sucesso. Seja bem-vindo(a), {form.username.data}!', 'success')
         return redirect(url_for('login'))
     return render_template('cadastrar.html', title='Cadastrar', form=form)
 
@@ -142,3 +144,42 @@ def user_post(username):
         .order_by(Post.date_posted.desc())\
         .paginate(page=page, per_page=5)
     return render_template('usuario_post.html', posts=posts, user=user)
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Recuperação de senha', sender='noreply@demo.com', recipients=[user.email])
+    msg.body = f'''Para redefinir sua senha, clique no seguinte link:
+{url_for('reset_token', token=token, _external=True)}
+
+Se voce não solicitou esta alteração, ignore este email.
+'''
+    mail.send(msg)
+
+@app.route("/reset_senha", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('Um e-mail para redefinir a senha foi enviado, verifique sua caixa de entrada', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_senha.html', title='Resetar Senha', form=form)
+
+@app.route("/reset_senha/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return(url_for('home'))
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('O token informado está inválido ou expirado', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit(): 
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash('Sua senha foi redefinida com sucesso. Por favor, realize o login', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Resetar Senha', form=form)
