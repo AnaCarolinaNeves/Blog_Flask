@@ -32,18 +32,18 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarToggle">
                     <div class="navbar-nav mr-auto">
-                        <a class="nav-item nav-link" href="{{ url_for('home') }}">Home</a>
-                        <a class="nav-item nav-link" href="{{ url_for('sobre') }}">Sobre</a>
+                        <a class="nav-item nav-link" href="{{ url_for('main.home') }}">Home</a>
+                        <a class="nav-item nav-link" href="{{ url_for('main.sobre') }}">Sobre</a>
                     </div>
                     <!-- Navbar Right Side -->
                     <div class="navbar-nav">
                         {% if current_user.is_authenticated %}
-                            <a class="nav-item nav-link" href="{{ url_for('novo_post') }}">Novo Post</a>
-                            <a class="nav-item nav-link" href="{{ url_for('conta') }}">Meu Perfil</a>
-                            <a class="nav-item nav-link" href="{{ url_for('logout') }}">Sair</a>
+                            <a class="nav-item nav-link" href="{{ url_for('posts.novo_post') }}">Novo Post</a>
+                            <a class="nav-item nav-link" href="{{ url_for('users.conta') }}">Meu Perfil</a>
+                            <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Sair</a>
                         {% else %}
-                            <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
-                            <a class="nav-item nav-link" href="{{ url_for('cadastrar') }}">Cadastrar</a>
+                            <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
+                            <a class="nav-item nav-link" href="{{ url_for('users.cadastrar') }}">Cadastrar</a>
                         {% endif %}
                     </div>
                 </div>

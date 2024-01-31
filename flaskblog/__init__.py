@@ -12,7 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'users.login'
 login_manager.login_message_category = 'info'
 # Configurações envio e-mail. flask-email
 app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
@@ -24,4 +24,11 @@ app.config['MAIL_USERNAME'] = ''
 app.config['MAIL_PASSWORD'] = ''
 mail = Mail(app)
 
-from flaskblog import routes
+# Importando blueprints
+from flaskblog.users.routes import users
+from flaskblog.posts.routes import posts
+from flaskblog.main.routes import main
+# Registrando blueprints
+app.register_blueprint(users)
+app.register_blueprint(posts)
+app.register_blueprint(main)

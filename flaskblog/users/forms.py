@@ -1,10 +1,9 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
+from flask_login import current_user
 from flaskblog.models import User
-
 
 class RegistrationForm(FlaskForm):
     username = StringField('Nome', validators=[DataRequired(), Length(min=2, max=20)])
@@ -47,11 +46,6 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError('O email já está sendo utilizado. Por favor, escolha outro.')
             
-class PostForm(FlaskForm):
-    title = StringField('Título', validators=[DataRequired()])
-    content = TextAreaField('Conteúdo', validators=[DataRequired()])
-    submit = SubmitField('Publicar')
-
 class RequestResetForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Redefinição de senha')
